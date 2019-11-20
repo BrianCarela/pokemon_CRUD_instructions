@@ -1,7 +1,7 @@
 # pokemon_CRUD_instructions
 step by step on how to make a Pokemon CRUD app using node.js, several dependencies, PostgreSQL, and a basic front end (HTML, CSS, JavaScript)
 
-POKEMON APP 
+## POKEMON APP Section 1
 
 1. Set up the server
 2. Set up the initial view
@@ -316,3 +316,85 @@ module.exports = Pokemon;
 ```
 
 OK TEST IT
+
+```bash
+node app.js
+```
+
+## Section 1.5, displaying 1 Pokemon at a time
+
+Ok so we need a new page to view, if we want to see just 1 pokemon in the database, so we build that path out inside files that mostly already exists. Section 2 is building out a path to respond to URL requests with database queries, which also means setting up some front end javascript with FETCH in order to make URL requests upon submitting the new Pokemon form. Here’s a list of actions that need to be completed
+
+- Create a view to show 1 Pokemon
+- Create a “find by ID” method (SQL query) on /models/pokemon.js
+- Create a route on /controllers/pokemon/index.js to listen to users arriving at localhost:8000/pokemon/:id (RESTful Routing notes*)
+- Create a controller method on /controllers/pokemon/controller.js to handle the URL request, which means access the model method, and respond to the user with html
+
+The View
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="/js/script.js"></script>
+    <title></title>
+  </head>
+  <body>
+    <a href="/pokemon/">Back to all Pokemon</a>
+    <hr />
+
+    <h5>{{ name }} - {{ type }} Type Pokemon</h5>
+    <img src={{ image }} />
+
+    <p>{{ description }}</p>
+    <hr />
+
+    <a href="/pokemon/{{ id }}/edit">Edit this Pokemon</a>
+    <button class="delete-pokemon" data-id={{ id }}>DELETE THIS POKEMON? ARE YOU SURE?</button>
+  </body>
+</html>
+```
+
+Note the edit link and the delete, which we will come back to. 
+The Model’s SQL query
+
+```javascript
+Pokemon.findById = (id) => {
+  return db.one(
+    'SELECT * FROM pokemon WHERE id=$1',
+    [id]
+  );
+};
+```
+
+Talk about .one() and how $1 and the array work together
+
+The URL route
+
+```javascript
+router.get('/:id', controller.show);
+```
+
+Put this above the router.get(‘/‘, controller.index); so you can demonstrate why RESTful routing is important.
+Also talk about how the controller method name should reflect the html file name, as per naming convention
+
+The Controller Method
+
+```javascript
+controller.show = (req, res) => {
+  const id = req.params.id;
+  Pokemon
+    .findById(id)
+    .then((data) => {
+      res.render('pokemon/show',data);
+    })
+    .catch(err => console.log('ERROR:', err));
+};
+```
+
+Pokemon.findById is the query, you use the id that’s entered in the URL, it responds with html and includes the data that comes back from the database
+
+TEST IT
+
+So far in terms of the controllers, there only exists a path for the app to respond to URL requests with a View, and not a /controllers/api/ path for database responses to URL requests
