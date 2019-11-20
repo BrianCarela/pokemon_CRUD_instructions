@@ -48,7 +48,8 @@ app.use(bodyParser.json());
 // connect router
 app.use(require('./router'));
 
-app.listen(PORT, () => console.log('Server is listening on port', PORT)); ```
+app.listen(PORT, () => console.log('Server is listening on port', PORT));
+```
 
 ```javascript
 // router.js
@@ -75,7 +76,8 @@ Side note: You add `--save` at the end so that the package.json has a way of pub
 Setting up a view
 
 ```bash
-Mkdir views touch views/index.html
+Mkdir views
+touch views/index.html
 ```
 
 ```html
@@ -110,7 +112,8 @@ Either in the terminal for Mac, or manually in the SQL shell, let’s create a d
 ```bash
 createdb pokemon_fullstack
 
-mkdir db touch db/pokemon_seeds.sql
+mkdir db
+touch db/pokemon_seeds.sql
 touch db/index.js
 ```
 
@@ -223,7 +226,8 @@ router.use('/pokemon', require('./controllers/pokemon'));
 When we make a new URL extension to arrive at, you want to make an entire folder for it
 
 ```bash
-Mkdir views/pokemon touch views/pokemon/index.html
+Mkdir views/pokemon
+touch views/pokemon/index.html
 ```
 
 
