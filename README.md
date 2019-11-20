@@ -62,15 +62,15 @@ module.exports = router;
 Installing dependencies
 
 ```bash
-npm install express —save
+npm install express --save
 
-Npm install mustache-express —save
+Npm install mustache-express --save
 
-Npm install body-parser —save
+Npm install body-parser --save
 
-npm install pg-promise —save
+npm install pg-promise --save
 ```
-Side note: You add `—save` at the end so that the package.json has a way of publicly remembering the dependencies that you installed. This helps you avoid having to upload node modules to GitHub, when you upload your project. The way to avoid uploading them is to create a .gitignore file, but by default, the file will be hidden. So if you use the terminal to create the file, you might not have a way of opening the file to edit it. I suggest you use your text editor to create a new file called “.gitignore” in a way where you can edit the text on the file. The only text that should exist on the file is “/node_modules”
+Side note: You add `--save` at the end so that the package.json has a way of publicly remembering the dependencies that you installed. This helps you avoid having to upload node modules to GitHub, when you upload your project. The way to avoid uploading them is to create a .gitignore file, but by default, the file will be hidden. So if you use the terminal to create the file, you might not have a way of opening the file to edit it. I suggest you use your text editor to create a new file called “.gitignore” in a way where you can edit the text on the file. The only text that should exist on the file is “/node_modules”
 
 Setting up a view
 
