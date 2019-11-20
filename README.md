@@ -208,7 +208,7 @@ const db = pgp(
 	process.env.DATABASE_URL
 	// modify the following string with your user name:
   // || 'postgres://<username>@localhost:5432/<database name>');
-	|| 'postgres://briancarela@localhost:5432/pokemon_fullstack’);
+	|| 'postgres://briancarela@localhost:5432/pokemon_fullstack');
 
 
 module.exports = db;
