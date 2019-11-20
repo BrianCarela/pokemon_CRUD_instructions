@@ -13,7 +13,8 @@ step by step on how to make a Pokemon CRUD app using node.js, several dependenci
 8. Begin lining things up to DELETE a pokemon, create the front end javascript. Create controller method and db entry (SECTION 4) (COMPLETE)
 
 
-Create a new file called “.gitignore” in a way where you can edit the text on the file. The only text that should exist on the file is “/node_modules”
+Note: BEFORE UPLOADING ANY OF THIS TO GITHUB, DO THE FOLLOWING: Create a new file called “.gitignore” in a way where you can edit the text on the file (preferrably in your text editor). The only text that should exist on the file is “/node_modules”. The reason for this is that you will locally create a lot of node modules when you install dependencies to your application. These node modules are really only important for a full, published version of the application. If you upload these files to github, you may run into errors for uploading too much data at once. Having a `.gitignore` file resolves this issue. As stated later in this readme.md, you will add `--save` to the end of installing your dependencies, so that the name of the node modules are located on the package.json file that comes with any app like this. This way, if you needed to pass the application to anybody else, they can download everything (without the node_modules folder because it shouldn't be on your online repository), and run the command `npm install` in their terminal in order to auto-install all necessary dependencies.
+
 Begin
 
 Setting up Server
