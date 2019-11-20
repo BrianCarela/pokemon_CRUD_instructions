@@ -117,8 +117,9 @@ touch db/pokemon_seeds.sql
 touch db/index.js
 ```
 
+below is `db/pokemon_seeds.sql`
+
 ```sql
-- - - db/pokemon_seeds.sql
 DROP TABLE IF EXISTS pokemon;
 
 CREATE TABLE pokemon(
