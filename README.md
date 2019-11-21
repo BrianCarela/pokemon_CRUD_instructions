@@ -351,7 +351,7 @@ The View
     <p>{{ description }}</p>
     <hr />
 
-    <a href="/pokemon/{{ id }}/edit">Edit this Pokemon</a>
+    <a href="/pokemon/{{ id }}/update">Edit this Pokemon</a>
     <button class="delete-pokemon" data-id={{ id }}>DELETE THIS POKEMON? ARE YOU SURE?</button>
   </body>
 </html>
