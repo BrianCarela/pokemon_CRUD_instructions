@@ -15,9 +15,14 @@ step by step on how to make a Pokemon CRUD app using node.js, several dependenci
 
 Note: BEFORE UPLOADING ANY OF THIS TO GITHUB, DO THE FOLLOWING: Create a new file called “.gitignore” in a way where you can edit the text on the file (preferrably in your text editor). The only text that should exist on the file is “/node_modules”. The reason for this is that you will locally create a lot of node modules when you install dependencies to your application. These node modules are really only important for a full, published version of the application. If you upload these files to github, you may run into errors for uploading too much data at once. Having a `.gitignore` file resolves this issue. As stated later in this readme.md, you will add `--save` to the end of installing your dependencies, so that the name of the node modules are located on the package.json file that comes with any app like this. This way, if you needed to pass the application to anybody else, they can download everything (without the node_modules folder because it shouldn't be on your online repository), and run the command `npm install` in their terminal in order to auto-install all necessary dependencies.
 
-Begin
+## Setting up Server
 
-Setting up Server
+The following commands in terminal are for the following reasons:
+* Create the root folder for the application
+* Navigate into the root folder while in terminal
+* Create the entry file to the server
+* Initialize the node app
+* Create the router file to redirect users depending on where they want to navigate through the website
 
 ```bash
 Mkdir pokemon_fullstack
@@ -26,6 +31,9 @@ touch app.js
 npm init -y
 Touch router.js
 ```
+
+The following is the normal setup/settings for the server. The number used for PORT can be anything you want, as long as it isn't occupied by another server running on the same port. All of this won't function until you install your dependencies, and get a folder called `node_modules` when it happens, we will get to this soon
+
 ```javascript
 // app.js
 const express        = require('express');
@@ -46,22 +54,34 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// connect router
+// connect router.js
 app.use(require('./router'));
 
+// When the server is live, tell me in the terminal
 app.listen(PORT, () => console.log('Server is listening on port', PORT));
 ```
+
+The purpose of this router is to direct users to a certain page based on the url. In this case, when users go to the base URL `'/'` the application will render index.html in the views folder.
 
 ```javascript
 // router.js
 const router = require('express').Router();
 
+// '/' refers to 'localhost:8000/'
 router.get('/', (req, res) => res.render('index'));
 
+// this is so that the file can be plugged into app.js when it's required
 module.exports = router;
 ```
 
-Installing dependencies
+## Installing dependencies
+
+Each of these installs the 4 dependencies you need at minimum to run any CRUD application
+
+* express allows you to connect files to each other more easily, and handles any HTTP requests from the user
+* mustache-express allows you to template information on webpages, to be filled in with information it gets back from the database
+* body-parser allows you to easily translate data between the front end and the back end. It also helps in formatting any data you receive from an external API
+* pg-promise allows you to format SQL queries and connect your application to your SQL database
 
 ```bash
 npm install express --save
@@ -72,14 +92,21 @@ Npm install body-parser --save
 
 npm install pg-promise --save
 ```
+
 Side note: You add `--save` at the end so that the package.json has a way of publicly remembering the dependencies that you installed. This helps you avoid having to upload node modules to GitHub, when you upload your project. The way to avoid uploading them is to create a .gitignore file, but by default, the file will be hidden. So if you use the terminal to create the file, you might not have a way of opening the file to edit it. I suggest you use your text editor to create a new file called “.gitignore” in a way where you can edit the text on the file. The only text that should exist on the file is “/node_modules”
 
-Setting up a view
+## Setting up a view
+
+These commands in terminal will
+* create the views folder (The V in MVC, Models Views Controllers)
+* create the webpage for the base URL of your app
 
 ```bash
 Mkdir views
 touch views/index.html
 ```
+
+Here's index.html:
 
 ```html
 <!DOCTYPE html>
@@ -87,7 +114,6 @@ touch views/index.html
   <head>
     <meta charset="utf-8">
     <link rel="stylesheet" href="/css/style.css">
-    <script type="text/javascript" src="/js/jquery.js"></script>
     <script type="text/javascript" src="/js/script.js"></script>
 
     <title>Welcome!</title>
@@ -98,7 +124,8 @@ touch views/index.html
   </body>
 </html>
 ```
-Test it
+
+Test it, you can run your application with the following command in terminal:
 
 ```bash
 Node app.js
@@ -106,9 +133,17 @@ Node app.js
 
 Or, you can go into the package.json file and add a script that says `"start": "nodemon app.js",` if you have nodemon globally installed.
 
-Setup Database
+After running this command, open your browser and navigate to `http://localhost:8000/` to see the website live!!
 
-Either in the terminal for Mac, or manually in the SQL shell, let’s create a database 
+## Setup Database
+
+Either in the terminal for Mac, or manually in the SQL shell, let’s create a database. The following commands will:
+
+* create the psql database, in this case called `pokemon_fullstack`
+
+* create the db folder (short for database) which will hold files directly related to the database
+* create the backup SQL file that serves as a "save point" to your database.
+* create the entry file to the database
 
 ```bash
 createdb pokemon_fullstack
@@ -118,7 +153,7 @@ touch db/pokemon_seeds.sql
 touch db/index.js
 ```
 
-below is `db/pokemon_seeds.sql`
+below is `db/pokemon_seeds.sql`. The purpose of this file is to reset the database to a default setting. This is done by running the file, which will erase any current data tables and recreate it from scratch. If you're on Mac, you can simply enter the command `psql -d <database_name_here> -f db/<seed_file.sql_goes_here>` from the root folder, in order to reset your database. There's a command for Windows that you can google where you need the *absolute file path* (Hint: you can get that file path by navigating into the db folder while in bash, and use the `pwd` command to get the address, which might look like `c:/..../db/pokemon_seeds.sql`
 
 ```sql
 DROP TABLE IF EXISTS pokemon;
@@ -200,6 +235,8 @@ INSERT INTO pokemon (name, description, image, type) VALUES
 );
 ```
 
+The following file is the entry point to your database. I cannot emphasize enough to read the file, and add your user name to the database URL. It might take some playing around until you get it right if you're on windows, but on Mac the name should be your computer's username
+
 ```javascript 
 // db/index.js
 const pgp = require('pg-promise')();
@@ -216,7 +253,7 @@ module.exports = db;
 
 DON’T FORGET TO EDIT THE ADDRESS TO YOUR COMPUTER’S USER NAME
 
-Setup pipeline to view the database as a user - Router & View
+## Setup pipeline to view the database as a user - Router & View
 
 First let’s set up a route and a view
 
