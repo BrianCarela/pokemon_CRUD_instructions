@@ -251,7 +251,7 @@ const db = pgp(
 module.exports = db;
 ```
 
-DON’T FORGET TO EDIT THE ADDRESS TO YOUR COMPUTER’S USER NAME
+**DON’T FORGET TO EDIT THE ADDRESS TO YOUR COMPUTER’S USER NAME**
 
 ## Setup pipeline to view the database as a user - Router & View
 
@@ -262,14 +262,14 @@ First let’s set up a route and a view
 router.use('/pokemon', require('./controllers/pokemon'));
 ```
 
-When we make a new URL extension to arrive at, you want to make an entire folder for it
+When we make a new URL extension to arrive at, you want to make an entire folder for it in the views
 
 ```bash
 Mkdir views/pokemon
 touch views/pokemon/index.html
 ```
 
-
+Thanks to mustache express, we can 
 
 ```html
 <!-- /views/pokemon/index.html -->
@@ -436,3 +436,344 @@ Pokemon.findById is the query, you use the id that’s entered in the URL, it re
 TEST IT
 
 So far in terms of the controllers, there only exists a path for the app to respond to URL requests with a View, and not a /controllers/api/ path for database responses to URL requests
+
+
+## SECTION 2: Create to the database
+
+
+Creating to the database from this point is going to take some more setup than usual. Here’s a checklist of things needed:
+
+- A view with a form to create new things to the database, and a full path to arrive to the page (controller method)
+- Some front end JavaScript to take the values of the form, and send them to the database
+- A Route on router.js at the root of the app, in order to listen to these API POST requests
+- Create /controllers/api/ to keep our concerns separated 
+- Create /controllers/api/index.js to handle routing on API requests
+- Create /controllers/api/controller.js and a method to handle data being sent to the database
+- Create a method on /models/pokemon.js which includes a SQL query that will speak to the database
+
+View with an input form
+
+```bash
+Touch views/pokemon/new.html
+```
+
+```html
+<!DOCTYPE html>
+<html>
+  <!-- views/pokemon/new.html -->
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/css/style.css">
+    <script type="text/javascript" src="/js/script.js"></script>
+    <title>New Pokemon</title>
+  </head>
+  <body>
+    <h5> Create a new pokemon </h5>
+
+    <form id="new-pokemon-form">
+      <label>Name:</label>
+      <input class="poke-name-input" />
+      <br />
+
+      <label>Description:</label>
+      <textarea class="poke-description-input"></textarea>
+      <br />
+
+      <label>Image:</label>
+      <input class="poke-image-input" />
+      <br />
+
+      <label>Type:</label>
+      <input class="poke-type-input" />
+      <br />
+
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>
+```
+
+Classify each of the buttons as plainly as possible, so it’s easy to target from the front-end javascript. We will come back to it, but let’s create a path to arrive at this page first
+
+Since controllers/pokemon deals with handing users the Views, we don’t need to create anything on router.js just yet. Let’s add this line to controllers/pokemon/index.js
+
+```javascript
+// controllers/pokemon/index.js
+router.get('/new', controller.new);
+```
+
+Place this below the ‘/‘ and above the ‘:id’ listeners, according to RESTful routing
+
+```javascript
+// controllers/pokemon/controller.js
+controller.new = (req, res) => {
+  res.render('pokemon/new');
+};
+```
+
+Aaaaand that’s it! Let’s TEST THIS NEW PAGE
+
+After connecting to the page, let’s build a path to post to the database via the back end, and then build out the front end bridge 
+
+```bash
+mkdir controllers/api
+touch controllers/api/index.js controllers/api/controller.js
+```
+
+```javascript
+// router.js
+router.use('/api', require('./controllers/api'));
+```
+
+Place that line btwn ‘/‘ and ‘pokemon’
+
+```javascript
+// controllers/api/index.js
+const router = require('express').Router();
+
+const controller = require('./controller');
+
+router.post('/pokemon', controller.create);
+
+module.exports = router;
+```
+
+If you read the extension correctly, you’ll notice that the full URL to this route would be “ localhost:8000/api/pokemon ”. The reason for the /api extension is that this ENTIRE ROUTE is dedicated to reaching the database from the front end. The /pokemon extension is because this lane is dedicated to all things related to the pokemon table in the database. When you have other data or other functionality in your application, you should name it to what it’s related to
+
+```javascript
+// controllers/api/controller.js
+const Pokemon = require('../../models/pokemon');
+
+const controller = {};
+
+controller.create = (req, res) => {
+  const name = req.body.name,
+        description = req.body.description,
+        image = req.body.image,
+        type = req.body.type;
+
+  Pokemon
+    .create(name, description, image, type)
+    .then(data => res.json(data))
+    .catch(err => console.log('ERROR:', err));
+};
+
+module.exports = controller;
+```
+
+…What is Pokemon.create()? Does the Model have a SQL query lined up to actually post to the database yet? Let’s get that done!
+
+```javascript
+Pokemon.create = (name, description, image, type) => {
+  return db.one(
+    'INSERT INTO pokemon (name, description, image, type) VALUES ($1, $2, $3, $4) returning id',
+    [name, description, image, type]
+  );
+};
+```
+OK the full path is available, and now if we POST from the front end to localhost:8000/api/pokemon with the proper data (name, description, image, type) we can access the database. But how do we do that??
+
+```bash
+Mkdir public public/js
+Touch public/js/script.js
+```
+____________________________________________________________________________________________________________________
+
+
+Let’s first make a function that matches the pokemon form in HTML, and simply packs up the data into a neat object to be used for later
+
+```javascript
+// public/js/script.js
+function packUpForm(){
+  // Select the 4 sections of the form's value
+  const name = document.querySelector('.poke-name-input').value,
+        description = document.querySelector('.poke-description-input').value,
+        image = document.querySelector('.poke-image-input').value,
+        type = document.querySelector('.poke-type-input').value;
+
+  // turn it into an object
+  const pokeData = {name: name, description: description, image: image, type: type};
+
+  return pokeData;
+}
+```
+
+Now let’s try to use fetch
+
+```javascript
+window.onload = function() {
+  document.getElementById("new-pokemon-form").addEventListener("submit", function(e){
+    e.preventDefault();
+    // call the backend URL that we set up, AND call it response so we can do something with it
+    fetch('/api/pokemon', {
+            method: 'post',
+            body:    JSON.stringify(packUpForm()),
+            headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => {
+        // resolve the promise
+        return response.json();
+    })
+    .then(data =>{
+      console.log("data: ", data);
+      window.location.replace('/pokemon/' + data.id);
+    })
+    .catch(err => console.error("fetch error: ", err)); // end of functional instructions
+  }); // end of event listener
+}; // end of window.onload
+```
+
+Proper url, method is post, the body we’re sending comes from our other function, then upon success we go to the next page (the response comes with the ID of the new entry in the database, so we use that to automate going to the newly created Pokemon’s page)
+
+Also note that all of this is defined unload, because if we try to add an event listener to an element in the DOM before the user/browser gets it, the element comes up as null, and we can’t attach functionality to the element.
+
+LET’S TRY MAKING A NEW POKEMON
+
+## Section 3: Update the database
+
+Now that we can create new Pokemon and add them to the database, what happens if we misspell something, or learn something new about them? We should be able to update them! Here are the following things we need to build out to be able to update the database:
+
+- Views/pokemon/update.html should be created for the user to fill out the form
+- Controllers/pokemon/index.js should be updated with a new route (URL)
+- Controllers/pokemon/controller.js should be updated with a method to bring the edit page pre-filled with the original content from the database
+- Public/js/script.js should be updated with a way to handle form submission, and send that data to the database. On success, return to the show.html
+- Controllers/api/index.js should be updated with a new backend route
+- Controllers/api/controller.js should be updated with a method to send the updated info to the backend
+- Models/pokemon.js should be updated with a SQL query that communicated the updated to the database, and return the ID to redirect the user to show.html
+
+```html
+<!- -  views/pokemon/update.html  - - >
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="/js/script.js"></script>
+    <title></title>
+  </head>
+  <body>
+    <h5> Edit {{ name }} </h5>
+
+    <form id=“update-pokemon-form">
+      <label>Name:</label>
+      <input class="poke-name-input" value={{ name }} />
+      <br />
+
+      <label>Description:</label>
+      <textarea class="poke-description-input">
+        {{ description }}
+      </textarea>
+      <br />
+
+      <label>Image:</label>
+      <input class="poke-image-input" value={{ image }} />
+      <br />
+
+      <label>Type:</label>
+      <input class="poke-type-input" value={{ type }} />
+      <br />
+
+      <input type="hidden" id="poke-id-input" value={{ id }} />
+
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>
+```
+
+Notice that the classes match our front-end javascript, so we already have a function to package up this form information. This is separate from the function to add to the database, so that we can simply re-use some of the script. The id for the FORM itself is different, so that we can make a new function for this form specifically. We will also include the use of the hidden input above the button, which is to help pass us the id of the pokemon in this case.
+
+```javascript
+// controllers/pokemon/index.js
+router.get('/:id/update’, controller.update);
+```
+Note that this route should go btwn the ‘/new’ route and the ‘/:id’ route. Because if it’s below the ‘:id’, it will always redirect to show and you’ll never get to edit.
+
+```javascript
+// controllers/pokemon/controller.js
+controller.edit = (req, res) => {
+  const id = req.params.id;
+  Pokemon
+    .findById(id)
+    .then(data => {
+      res.render('pokemon/update’, data);
+    })
+};
+```
+We query the database to find this Pokemon’s info so that we can auto fill the form on the next page with the current information. You can have plain text to show the previous information as well, but we can worry about that when we want to make the app a better experience for the user. Right now we’re just building out an MVP (Minimal Viable Product) so as long as everything works at it’s bare minimum without error, we’re concerned about the right things!
+
+```javascript
+// public/js/script.js
+window.onload = function() {
+  document.getElementById(“update-pokemon-form").addEventListener("submit", function(e){
+    let id = document.getElementById(“poke-id-input”).value;
+    let dataPackage = packUpForm();
+    dataPackage.id = id
+    e.preventDefault();
+    // call the backend URL that we set up, AND call it response so we can do something with it
+    fetch(‘/api/pokemon/' + id, {
+            method: 'put',
+            body:    JSON.stringify(dataPackage),
+            headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => {
+        // resolve the promise
+        return response.json();
+    })
+    .then(data =>{
+      console.log("data: ", data);
+      window.location.replace('/pokemon/' + data.id);
+    })
+    .catch(err => console.error("fetch error: ", err)); // end of functional instructions
+  }); // end of event listener
+}; // end of window.onload
+```
+
+This time, we added the line `let id = document.getElementById(“poke-id-input”).value;` so that we can pass in the id dynamically into the url. Then we stored up the object we’re going to send to the backend, so we can attach the id. You can think of this as adding someone’s name to a package before mailing it away!
+
+```javascript
+// controllers/api/index.js
+router.put('/pokemon/:id', controller.update);
+```
+
+This is listening to localhost:8000/api/pokemon/:id for the update and will use the following method:
+
+```javascript
+// controllers/api/controller.js
+controller.update = (req, res) => {
+  const name = req.body.name,
+             description = req.body.description,
+             image = req.body.image,
+             type = req.body.type,
+             id = req.body.id;
+
+  Pokemon
+    .update(name, description, image, type, id)
+    .then(data => res.json(data))
+    .catch(err => console.log('ERROR:', err));
+};
+```
+
+By using Pokemon.update we should be updating that method in the Model!
+
+```javascript
+// models/pokemon.js
+Pokemon.update = (name, description, image, type, id) => {
+  return db.one(
+    'UPDATE pokemon SET name = $1, description = $2, image = $3, type = $4 WHERE id = $5 returning id',
+    [name, description, image, type, id]
+  );
+};
+```
+
+As usual, note the ‘returning id’ right at the end of the query
+
+ANYWAYS, IT’S TIME TO TEST THAT THIS WORKS OUT. Try editing Pikachu!! You can always re-seed the database to start over
+
+## Section 4: Deleting from the database
+
+Finally we’re almost done! Time to put the D in CRUD app. Here are the following actions to be taken:
+
+- Public/js/script.js should be edited (with show.html in mind) so that the button will POP UP A CONFIRM. If true, fetch(URL, { method: ‘delete’}. If false, do nothing
+- Controllers/api/index.js should have a router.delete method
+- Controllers/api/controller.js should have a controller method that activates the query to the database
+- Models/pokemon.js should have that database query ready to delete a pokemon based on id. Db.none()
